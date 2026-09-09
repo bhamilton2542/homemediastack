@@ -1,0 +1,15 @@
+# Real secrets -- never commit this
+.env
+
+# Runtime data/config -- machine-specific, not code
+data/
+config/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor/backup cruft
+*.bak
+*.backup*
+*.save

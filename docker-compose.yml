@@ -1,0 +1,198 @@
+services:
+  clan-about:
+    build: ./clan-about
+    container_name: clan-about
+    restart: unless-stopped
+    ports:
+      - 5700:5700
+    volumes:
+      - ./data/clan-about:/app/data
+    environment:
+      - SECRET_KEY=${CLAN_ABOUT_SECRET_KEY}
+
+  clan-vote:
+    build: ./clan-vote
+    container_name: clan-vote
+    restart: unless-stopped
+    ports:
+      - 5600:5600
+    volumes:
+      - ./data/clan-vote:/app/data
+    environment:
+      - SECRET_KEY=${CLAN_VOTE_SECRET_KEY}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - DISCORD_NEW_VOTE_WEBHOOK_URL=${DISCORD_NEW_VOTE_WEBHOOK_URL}
+      - PYTHONUNBUFFERED=1
+
+  mealie:
+    container_name: mealie
+    image: ghcr.io/mealie-recipes/mealie:v3.24.0
+    restart: unless-stopped
+    ports:
+      - 9925:9000
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - ALLOW_SIGNUP=false
+      - BASE_URL=${MEALIE_BASE_URL}
+    volumes:
+      - ./data/mealie:/app/data
+
+  dinner-roller:
+    build: ./dinner-roller
+    container_name: dinner-roller
+    restart: unless-stopped
+    ports:
+      - 5500:5500
+    volumes:
+      - ./data/dinner-roller:/app/data
+    environment:
+      - MEALIE_URL=http://mealie:9000
+      - MEALIE_API_TOKEN=${MEALIE_API_TOKEN}
+      - MEALIE_SHOPPING_LIST_ID=${MEALIE_SHOPPING_LIST_ID}
+
+  agregarr:
+    image: agregarr/agregarr:latest
+    container_name: agregarr
+    restart: unless-stopped
+    volumes:
+      - ./config/agregarr:/app/config
+      - ${MEDIA_PATH}:/media
+    ports:
+      - 7171:7171
+
+  bazarr:
+    container_name: bazarr
+    build: ./bazarr-alass
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+    ports:
+      - 6767:6767
+    volumes:
+      - ./config/bazarr:/config
+      - ${MEDIA_PATH}:/media
+
+  homepage:
+    container_name: homepage
+    image: ghcr.io/gethomepage/homepage:latest
+    restart: unless-stopped
+    environment:
+      - HOMEPAGE_ALLOWED_HOSTS=${HOMEPAGE_ALLOWED_HOSTS}
+    ports:
+      - 3000:3000
+    volumes:
+      - ${MEDIA_PATH}:/mnt/plex:ro
+      - ./config/homepage:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  nzbget:
+    container_name: nzbget
+    image: ghcr.io/linuxserver/nzbget:latest
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+    ports:
+      - 6789:6789
+    volumes:
+      - ./config/nzbget:/config
+      - ${DOWNLOADS_PATH}:/downloads
+      - ${MUSIC_DOWNLOADS_PATH}:/downloads-music
+
+  radarr:
+    container_name: radarr
+    image: ghcr.io/linuxserver/radarr:latest
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+    ports:
+      - 7878:7878
+    volumes:
+      - ./config/radarr:/config
+      - ${MEDIA_PATH}:/media
+      - ${DOWNLOADS_PATH}:/downloads
+
+  seerr:
+    container_name: seerr
+    image: ghcr.io/seerr-team/seerr:latest
+    init: true
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+    ports:
+      - 5055:5055
+    volumes:
+      - ./config/overseerr:/app/config
+
+  sonarr:
+    container_name: sonarr
+    image: ghcr.io/linuxserver/sonarr:latest
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+    ports:
+      - 8989:8989
+    volumes:
+      - ./config/sonarr:/config
+      - ${MEDIA_PATH}:/media
+      - ${DOWNLOADS_PATH}:/downloads
+
+  tautulli:
+    image: lscr.io/linuxserver/tautulli:latest
+    container_name: tautulli
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+    ports:
+      - 8181:8181
+    volumes:
+      - ./config/tautulli:/config
+
+  tdarr:
+    container_name: tdarr
+    image: ghcr.io/haveagitgat/tdarr:latest
+    restart: unless-stopped
+    ports:
+      - 8265:8265
+      - 8266:8266
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - UMASK_SET=002
+      - serverIP=0.0.0.0
+      - serverPort=8266
+      - webUIPort=8265
+      - internalNode=true
+      - inContainer=true
+      - ffmpegVersion=7
+      - nodeName=InternalNode
+      - auth=false
+    volumes:
+      - ./config/tdarr/server:/app/server
+      - ./config/tdarr/configs:/app/configs
+      - ./config/tdarr/logs:/app/logs
+      - ${MEDIA_PATH}:/media
+      - ./config/tdarr/transcode_cache:/temp
+
+  watchtower:
+    image: nickfedor/watchtower
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - TZ=${TZ}
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_SCHEDULE=0 0 4 * * *

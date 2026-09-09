@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Clan Recruitment // Clearance Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+<style>
+  :root{
+    --bg:#14171A;
+    --panel:#1E2226;
+    --panel-2:#262B30;
+    --line:#333A40;
+    --approve:#8FBC5A;
+    --approve-dim:#5F7D3C;
+    --deny:#C4432B;
+    --deny-dim:#8A2F1E;
+    --text:#E4E8DC;
+    --text-dim:#8B9088;
+    --amber:#D9A441;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, transparent 1px, transparent 2px),
+      var(--bg);
+    color:var(--text);
+    font-family:'Share Tech Mono', monospace;
+    padding:24px 16px 60px;
+  }
+
+  .scanlines{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    background:repeating-linear-gradient(180deg, rgba(0,0,0,0.06) 0px, transparent 1px, transparent 3px);
+    z-index:100;
+  }
+
+  .wrap{max-width:720px;margin:0 auto;}
+
+  .hq-header{
+    text-align:center;
+    margin-bottom:28px;
+    padding-bottom:18px;
+    border-bottom:2px solid var(--line);
+  }
+  .hq-eyebrow{
+    font-size:11px;
+    letter-spacing:0.3em;
+    color:var(--amber);
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  h1{
+    font-family:'Black Ops One', sans-serif;
+    font-size:clamp(24px, 5vw, 34px);
+    margin:0;
+    letter-spacing:0.02em;
+    color:var(--text);
+    text-shadow:0 0 20px rgba(143,188,90,0.15);
+  }
+  .hq-sub{
+    font-size:12px;
+    color:var(--text-dim);
+    margin-top:8px;
+    letter-spacing:0.05em;
+  }
+
+  /* ===== login ===== */
+  .login-panel{
+    max-width:380px;
+    margin:60px auto;
+    background:var(--panel);
+    border:1px solid var(--line);
+    padding:28px;
+    position:relative;
+  }
+  .login-panel::before{
+    content:'';
+    position:absolute;
+    top:0;left:0;right:0;
+    height:3px;
+    background:linear-gradient(90deg, var(--approve), var(--amber), var(--deny));
+  }
+  .login-title{
+    font-family:'Black Ops One', sans-serif;
+    font-size:16px;
+    text-align:center;
+    margin-bottom:4px;
+    letter-spacing:0.05em;
+  }
+  .login-sub{
+    text-align:center;
+    font-size:11px;
+    color:var(--text-dim);
+    margin-bottom:20px;
+    letter-spacing:0.1em;
+  }
+  .field-label{
+    font-size:10px;
+    letter-spacing:0.15em;
+    text-transform:uppercase;
+    color:var(--amber);
+    margin-bottom:5px;
+    display:block;
+  }
+  input[type="text"], input[type="password"]{
+    width:100%;
+    background:var(--bg);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:10px 12px;
+    font-family:'Share Tech Mono', monospace;
+    font-size:14px;
+    margin-bottom:16px;
+  }
+  input:focus-visible{outline:2px solid var(--approve);outline-offset:1px;}
+
+  .btn{
+    width:100%;
+    padding:12px;
+    border:1px solid;
+    background:transparent;
+    font-family:'Share Tech Mono', monospace;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:all 0.15s ease;
+  }
+  .btn-approve{border-color:var(--approve);color:var(--approve);}
+  .btn-approve:hover{background:var(--approve);color:var(--bg);}
+  .btn-approve:focus-visible{outline:2px solid var(--approve);outline-offset:2px;}
+
+  .error-msg{
+    color:var(--deny);
+    font-size:12px;
+    text-align:center;
+    margin-top:12px;
+    min-height:16px;
+  }
+
+  /* ===== top bar (logged in) ===== */
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:24px;
+    font-size:12px;
+    color:var(--text-dim);
+  }
+  .topbar .who b{color:var(--amber);}
+  .topbar .actions{display:flex;gap:12px;align-items:center;}
+  .link-btn{
+    background:none;
+    border:none;
+    color:var(--text-dim);
+    font-family:'Share Tech Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.05em;
+    cursor:pointer;
+    text-decoration:underline;
+    padding:0;
+  }
+  .link-btn:hover{color:var(--text);}
+  .link-btn:focus-visible{outline:2px solid var(--amber);}
+
+  .tag-admin{
+    background:var(--amber);
+    color:var(--bg);
+    font-size:10px;
+    font-weight:700;
+    padding:2px 6px;
+    letter-spacing:0.1em;
+  }
+
+  /* ===== dossier cards ===== */
+  .section-label{
+    font-size:11px;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--text-dim);
+    margin:24px 0 12px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .section-label::after{
+    content:'';
+    flex:1;
+    height:1px;
+    background:var(--line);
+  }
+
+  .dossier{
+    background:var(--panel);
+    border:1px solid var(--line);
+    margin-bottom:16px;
+    position:relative;
+    overflow:hidden;
+  }
+  .dossier-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    padding:16px 18px 12px;
+    border-bottom:1px dashed var(--line);
+  }
+  .dossier-name{
+    font-family:'Black Ops One', sans-serif;
+    font-size:17px;
+    color:var(--text);
+    letter-spacing:0.02em;
+  }
+  .dossier-meta{
+    font-size:10px;
+    color:var(--text-dim);
+    margin-top:4px;
+    letter-spacing:0.05em;
+  }
+  .dossier-note{
+    padding:12px 18px;
+    font-size:13px;
+    color:var(--text-dim);
+    line-height:1.5;
+    border-bottom:1px dashed var(--line);
+  }
+  .dossier-note.empty{font-style:italic;opacity:0.6;}
+
+  .clearance-note{
+    padding:8px 18px;
+    font-size:11px;
+    color:var(--amber);
+    letter-spacing:0.03em;
+    border-bottom:1px dashed var(--line);
+    background:rgba(217,164,65,0.06);
+  }
+
+  .tally{
+    display:flex;
+    gap:16px;
+    padding:10px 18px;
+    font-size:11px;
+    color:var(--text-dim);
+    letter-spacing:0.05em;
+  }
+  .tally b.a{color:var(--approve);}
+  .tally b.d{color:var(--deny);}
+
+  .vote-row{
+    display:flex;
+    gap:1px;
+    background:var(--line);
+  }
+  .vote-btn{
+    flex:1;
+    padding:14px;
+    border:none;
+    background:var(--panel-2);
+    font-family:'Black Ops One', sans-serif;
+    font-size:13px;
+    letter-spacing:0.08em;
+    cursor:pointer;
+    color:var(--text-dim);
+    transition:all 0.15s ease;
+  }
+  .vote-btn:focus-visible{outline:2px solid var(--amber);outline-offset:-3px;}
+  .vote-btn.approve:hover{background:var(--approve-dim);color:var(--text);}
+  .vote-btn.deny:hover{background:var(--deny-dim);color:var(--text);}
+  .vote-btn.active-approve{background:var(--approve);color:var(--bg);}
+  .vote-btn.active-deny{background:var(--deny);color:var(--bg);}
+
+  .remove-nominee{
+    background:none;
+    border:none;
+    color:var(--text-dim);
+    font-size:16px;
+    cursor:pointer;
+    line-height:1;
+    padding:2px 6px;
+  }
+  .remove-nominee:hover{color:var(--deny);}
+
+  /* ===== stamp animation ===== */
+  .stamp-layer{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:5;
+  }
+  .stamp{
+    font-family:'Black Ops One', sans-serif;
+    font-size:34px;
+    letter-spacing:0.06em;
+    padding:10px 24px;
+    border:5px solid;
+    border-radius:6px;
+    opacity:0;
+    transform:scale(2.4) rotate(-8deg);
+    filter:blur(1px);
+    text-shadow:0 0 8px currentColor;
+    mix-blend-mode:screen;
+  }
+  .stamp.approve-stamp{color:var(--approve);border-color:var(--approve);}
+  .stamp.deny-stamp{color:var(--deny);border-color:var(--deny);}
+
+  .empty-note{
+    text-align:center;
+    color:var(--text-dim);
+    font-size:13px;
+    padding:30px 0;
+  }
+
+  /* ===== admin panel ===== */
+  .admin-panel{
+    background:var(--panel);
+    border:1px solid var(--amber);
+    padding:18px;
+    margin-bottom:24px;
+  }
+  .admin-panel h2{
+    font-family:'Black Ops One', sans-serif;
+    font-size:14px;
+    color:var(--amber);
+    margin:0 0 14px;
+    letter-spacing:0.05em;
+  }
+  .admin-row{display:flex;gap:8px;margin-bottom:10px;}
+  .roster-checkbox-row{align-items:center;justify-content:space-between;}
+  .checkbox-label{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+    color:var(--text-dim);
+    cursor:pointer;
+  }
+  .checkbox-label input[type="checkbox"]{
+    width:16px;
+    height:16px;
+    accent-color:var(--amber);
+    cursor:pointer;
+  }
+  .roster-list-wrap{margin-top:4px;}
+  .roster-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 0;
+    border-top:1px dashed var(--line);
+    font-size:13px;
+  }
+  .roster-item:first-child{border-top:none;margin-top:10px;padding-top:14px;border-top:1px dashed var(--line);}
+  .admin-row input{margin-bottom:0;flex:1;}
+  .btn-amber{border-color:var(--amber);color:var(--amber);width:auto;padding:10px 16px;white-space:nowrap;}
+  .btn-amber:hover{background:var(--amber);color:var(--bg);}
+
+  @media (prefers-reduced-motion: reduce){
+    .stamp{transition:none !important;}
+  }
+
+  @media (max-width:480px){
+    .vote-btn{font-size:11px;padding:12px 6px;}
+    .admin-row{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div class="wrap">
+
+  <div class="hq-header">
+    <div class="hq-eyebrow">Restricted // Personnel Command</div>
+    <h1>Recruitment Clearance</h1>
+    <div class="hq-sub">Review dossiers. Cast your vote.</div>
+  </div>
+
+  <!-- LOGIN VIEW -->
+  <div id="login-view">
+    <div class="login-panel">
+      <div class="login-title">SECURE ACCESS TERMINAL</div>
+      <div class="login-sub">Authorization required</div>
+      <label class="field-label">Callsign</label>
+      <input type="text" id="login-username" autocomplete="username" />
+      <label class="field-label">Passcode</label>
+      <input type="password" id="login-password" autocomplete="current-password" />
+      <button class="btn btn-approve" id="login-btn">Authenticate</button>
+      <div class="error-msg" id="login-error"></div>
+    </div>
+  </div>
+
+  <!-- FORCED PASSWORD CHANGE VIEW -->
+  <div id="change-password-view" style="display:none;">
+    <div class="login-panel">
+      <div class="login-title">MANDATORY PASSCODE RESET</div>
+      <div class="login-sub">Default or temporary passcode detected</div>
+      <label class="field-label">Current Passcode</label>
+      <input type="password" id="cp-current" autocomplete="current-password" />
+      <label class="field-label">New Passcode</label>
+      <input type="password" id="cp-new" autocomplete="new-password" />
+      <label class="field-label">Confirm New Passcode</label>
+      <input type="password" id="cp-confirm" autocomplete="new-password" />
+      <button class="btn btn-approve" id="cp-submit-btn">Set New Passcode</button>
+      <div class="error-msg" id="cp-error"></div>
+    </div>
+  </div>
+
+  <!-- MAIN VIEW -->
+  <div id="main-view" style="display:none;">
+    <div class="topbar">
+      <div class="who">OPERATOR: <b id="whoami"></b> <span class="tag-admin" id="admin-tag" style="display:none;">COMMAND</span></div>
+      <div class="actions">
+        <button class="link-btn" id="logout-btn">Log Out</button>
+      </div>
+    </div>
+
+    <div id="admin-panel-container"></div>
+    <div id="roster-panel-container"></div>
+
+    <div class="section-label">Active Dossiers</div>
+    <div id="nominee-list"></div>
+  </div>
+
+</div>
+
+<script>
+  const loginView = document.getElementById('login-view');
+  const changePasswordView = document.getElementById('change-password-view');
+  const mainView = document.getElementById('main-view');
+  const loginBtn = document.getElementById('login-btn');
+  const loginError = document.getElementById('login-error');
+  const logoutBtn = document.getElementById('logout-btn');
+  const whoami = document.getElementById('whoami');
+  const adminTag = document.getElementById('admin-tag');
+  const adminPanelContainer = document.getElementById('admin-panel-container');
+  const rosterPanelContainer = document.getElementById('roster-panel-container');
+  const nomineeList = document.getElementById('nominee-list');
+  const cpSubmitBtn = document.getElementById('cp-submit-btn');
+  const cpError = document.getElementById('cp-error');
+
+
+  let currentUser = null;
+
+  async function checkSession(){
+    const res = await fetch('/api/me');
+    const data = await res.json();
+    if(data.logged_in){
+      currentUser = data;
+      routeAfterAuth();
+    } else {
+      showLogin();
+    }
+  }
+
+  // Every login-adjacent path funnels through here, so a mandatory
+  // passcode reset can never be skipped by refreshing straight into
+  // the main view.
+  function routeAfterAuth(){
+    if(currentUser.must_change_password){
+      showChangePassword();
+    } else {
+      showMain();
+    }
+  }
+
+  function showLogin(){
+    loginView.style.display = 'block';
+    changePasswordView.style.display = 'none';
+    mainView.style.display = 'none';
+  }
+
+  function showChangePassword(){
+    loginView.style.display = 'none';
+    changePasswordView.style.display = 'block';
+    mainView.style.display = 'none';
+    cpError.textContent = '';
+    document.getElementById('cp-current').value = '';
+    document.getElementById('cp-new').value = '';
+    document.getElementById('cp-confirm').value = '';
+  }
+
+  function showMain(){
+    loginView.style.display = 'none';
+    changePasswordView.style.display = 'none';
+    mainView.style.display = 'block';
+    whoami.textContent = currentUser.username;
+    adminTag.style.display = currentUser.is_admin ? 'inline-block' : 'none';
+    renderAdminPanel();
+    renderRosterPanel();
+    loadNominees();
+  }
+
+  cpSubmitBtn.addEventListener('click', attemptChangePassword);
+  document.getElementById('cp-confirm').addEventListener('keydown', e => { if(e.key === 'Enter') attemptChangePassword(); });
+
+  async function attemptChangePassword(){
+    const currentPw = document.getElementById('cp-current').value;
+    const newPw = document.getElementById('cp-new').value;
+    const confirmPw = document.getElementById('cp-confirm').value;
+    cpError.textContent = '';
+
+    if(newPw.length < 4){
+      cpError.textContent = 'New passcode must be at least 4 characters.';
+      return;
+    }
+    if(newPw !== confirmPw){
+      cpError.textContent = 'New passcode entries do not match.';
+      return;
+    }
+
+    const res = await fetch('/api/change-password', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({current_password: currentPw, new_password: newPw})
+    });
+
+    if(!res.ok){
+      const data = await res.json();
+      cpError.textContent = data.error || 'Could not update passcode.';
+      return;
+    }
+
+    currentUser.must_change_password = false;
+    showMain();
+  }
+
+  document.getElementById('login-username').addEventListener('keydown', e => { if(e.key === 'Enter') attemptLogin(); });
+  document.getElementById('login-password').addEventListener('keydown', e => { if(e.key === 'Enter') attemptLogin(); });
+  loginBtn.addEventListener('click', attemptLogin);
+
+  async function attemptLogin(){
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    loginError.textContent = '';
+
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({username, password})
+    });
+
+    if(!res.ok){
+      loginError.textContent = 'ACCESS DENIED — invalid callsign or passcode';
+      return;
+    }
+    currentUser = await res.json();
+    routeAfterAuth();
+  }
+
+  logoutBtn.addEventListener('click', async () => {
+
+    await fetch('/api/logout', {method: 'POST'});
+    currentUser = null;
+    nomineeList.innerHTML = '';
+    document.getElementById('login-username').value = '';
+    document.getElementById('login-password').value = '';
+    showLogin();
+  });
+
+  function renderAdminPanel(){
+    if(!currentUser.is_admin){
+      adminPanelContainer.innerHTML = '';
+      return;
+    }
+    adminPanelContainer.innerHTML = `
+      <div class="admin-panel">
+        <h2>Command // File a New Dossier</h2>
+        <div class="admin-row">
+          <input type="text" id="new-nominee-name" placeholder="Recruit name / gamertag" />
+        </div>
+        <div class="admin-row">
+          <input type="text" id="new-nominee-note" placeholder="Notes (optional)" />
+          <button class="btn-amber" id="add-nominee-btn">File Dossier</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('add-nominee-btn').addEventListener('click', addNominee);
+    document.getElementById('new-nominee-note').addEventListener('keydown', e => { if(e.key === 'Enter') addNominee(); });
+  }
+
+  function renderRosterPanel(){
+    if(!currentUser.is_admin){
+      rosterPanelContainer.innerHTML = '';
+      return;
+    }
+    rosterPanelContainer.innerHTML = `
+      <div class="admin-panel">
+        <h2>Command // Manage Roster</h2>
+        <div class="admin-row">
+          <input type="text" id="new-user-username" placeholder="Callsign (username)" />
+        </div>
+        <div class="admin-row">
+          <input type="text" id="new-user-password" placeholder="Passcode" />
+        </div>
+        <div class="admin-row roster-checkbox-row">
+          <label class="checkbox-label">
+            <input type="checkbox" id="new-user-admin" />
+            Grant Command (admin) access
+          </label>
+          <button class="btn-amber" id="add-user-btn">Add to Roster</button>
+        </div>
+        <div id="roster-error" class="error-msg"></div>
+        <div id="roster-list"></div>
+      </div>
+    `;
+    document.getElementById('add-user-btn').addEventListener('click', addUser);
+    document.getElementById('new-user-password').addEventListener('keydown', e => { if(e.key === 'Enter') addUser(); });
+    loadRoster();
+  }
+
+  async function loadRoster(){
+    const res = await fetch('/api/users');
+    if(!res.ok) return;
+    const users = await res.json();
+
+    const listEl = document.getElementById('roster-list');
+    if(!listEl) return;
+
+    listEl.innerHTML = users.map(u => `
+      <div class="roster-item">
+        <span>${escapeHtml(u.username)} ${u.is_admin ? '<span class="tag-admin">COMMAND</span>' : ''}</span>
+        ${u.username !== currentUser.username ? `<button class="remove-nominee" aria-label="Remove ${escapeHtml(u.username)}" data-userid="${u.id}">✕</button>` : ''}
+      </div>
+    `).join('');
+
+    listEl.querySelectorAll('button[data-userid]').forEach(btn => {
+      btn.addEventListener('click', () => removeUser(btn.dataset.userid, btn.closest('.roster-item').querySelector('span').textContent.trim()));
+    });
+  }
+
+  async function addUser(){
+    const username = document.getElementById('new-user-username').value.trim();
+    const password = document.getElementById('new-user-password').value;
+    const isAdmin = document.getElementById('new-user-admin').checked;
+    const errorEl = document.getElementById('roster-error');
+    errorEl.textContent = '';
+
+    if(!username || !password){
+      errorEl.textContent = 'Callsign and passcode both required.';
+      return;
+    }
+
+    const res = await fetch('/api/users', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({username, password, is_admin: isAdmin})
+    });
+
+    if(!res.ok){
+      const data = await res.json();
+      errorEl.textContent = data.error || 'Could not add member.';
+      return;
+    }
+
+    document.getElementById('new-user-username').value = '';
+    document.getElementById('new-user-password').value = '';
+    document.getElementById('new-user-admin').checked = false;
+    loadRoster();
+  }
+
+  async function removeUser(userId, label){
+    if(!confirm(`Remove ${label} from the roster? This cannot be undone.`)) return;
+    const res = await fetch('/api/users/' + userId, {method: 'DELETE'});
+    if(!res.ok){
+      const data = await res.json();
+      alert(data.error || 'Could not remove member.');
+      return;
+    }
+    loadRoster();
+  }
+
+  async function addNominee(){
+    const name = document.getElementById('new-nominee-name').value.trim();
+    const note = document.getElementById('new-nominee-note').value.trim();
+    if(!name) return;
+
+    await fetch('/api/nominees', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name, note})
+    });
+
+    document.getElementById('new-nominee-name').value = '';
+    document.getElementById('new-nominee-note').value = '';
+    loadNominees();
+  }
+
+  async function removeNominee(id){
+    await fetch('/api/nominees/' + id, {method: 'DELETE'});
+    loadNominees();
+  }
+
+  async function loadNominees(){
+    const res = await fetch('/api/nominees');
+    const nominees = await res.json();
+
+    if(nominees.length === 0){
+      nomineeList.innerHTML = '<div class="empty-note">No active dossiers. Command has not filed any recruits yet.</div>';
+      return;
+    }
+
+    nomineeList.innerHTML = '';
+    nominees.forEach(n => {
+      const card = document.createElement('div');
+      card.className = 'dossier';
+      card.dataset.id = n.id;
+
+      const approveActiveClass = n.my_vote === true ? 'active-approve' : '';
+      const denyActiveClass = n.my_vote === false ? 'active-deny' : '';
+
+      let clearanceLine = '';
+      if(n.hours_remaining !== null && n.hours_remaining !== undefined){
+        clearanceLine = n.hours_remaining > 0
+          ? `<div class="clearance-note">⏱ CLEARANCE PENDING — ${n.hours_remaining}h until automatic induction</div>`
+          : `<div class="clearance-note">⏱ CLEARANCE FINALIZING — induction imminent</div>`;
+      }
+
+      card.innerHTML = `
+        <div class="stamp-layer" id="stamp-layer-${n.id}"></div>
+        <div class="dossier-header">
+          <div>
+            <div class="dossier-name">${escapeHtml(n.name)}</div>
+            <div class="dossier-meta">FILED BY ${escapeHtml(n.submitted_by || 'UNKNOWN')} · ${n.created_at}</div>
+          </div>
+          ${currentUser.is_admin ? `<button class="remove-nominee" aria-label="Remove dossier" data-id="${n.id}">✕</button>` : ''}
+        </div>
+        <div class="dossier-note ${n.note ? '' : 'empty'}">${n.note ? escapeHtml(n.note) : 'No notes filed.'}</div>
+        ${clearanceLine}
+        <div class="tally">
+          <span><b class="a">${n.approve}</b> APPROVE</span>
+          <span><b class="d">${n.deny}</b> DENY</span>
+        </div>
+        <div class="vote-row">
+          <button class="vote-btn approve ${approveActiveClass}" data-id="${n.id}" data-vote="true">Approve</button>
+          <button class="vote-btn deny ${denyActiveClass}" data-id="${n.id}" data-vote="false">Deny</button>
+        </div>
+      `;
+      nomineeList.appendChild(card);
+    });
+
+    document.querySelectorAll('.vote-btn').forEach(btn => {
+      btn.addEventListener('click', () => castVote(btn.dataset.id, btn.dataset.vote === 'true'));
+    });
+    document.querySelectorAll('.remove-nominee').forEach(btn => {
+      btn.addEventListener('click', () => removeNominee(btn.dataset.id));
+    });
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  async function castVote(nomineeId, vote){
+    await fetch('/api/vote', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({nominee_id: parseInt(nomineeId), vote})
+    });
+
+    playStamp(nomineeId, vote);
+
+    setTimeout(() => loadNominees(), 550);
+  }
+
+  function playStamp(nomineeId, vote){
+    const layer = document.getElementById('stamp-layer-' + nomineeId);
+    if(!layer) return;
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const stamp = document.createElement('div');
+    stamp.className = 'stamp ' + (vote ? 'approve-stamp' : 'deny-stamp');
+    stamp.textContent = vote ? 'APPROVED' : 'DENIED';
+    layer.innerHTML = '';
+    layer.appendChild(stamp);
+
+    if(reduceMotion){
+      stamp.style.opacity = '1';
+      stamp.style.transform = 'scale(1) rotate(-8deg)';
+      setTimeout(() => { stamp.style.opacity = '0'; }, 900);
+      return;
+    }
+
+    anime({
+      targets: stamp,
+      opacity: [0, 1, 1, 0],
+      scale: [2.4, 0.95, 1, 1],
+      duration: 900,
+      easing: 'easeOutExpo',
+      keyframes: [
+        {opacity: 1, scale: 0.9, duration: 220, easing: 'easeOutQuad'},
+        {scale: 1.05, duration: 90},
+        {scale: 1, duration: 90},
+        {opacity: 1, duration: 350},
+        {opacity: 0, duration: 150}
+      ]
+    });
+  }
+
+  checkSession();
+</script>
+</body>
+</html>

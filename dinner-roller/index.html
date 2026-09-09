@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>What's for Dinner?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+<style>
+  :root{
+    --table:#171B27;
+    --table-2:#1D2333;
+    --surface:#252B3D;
+    --surface-2:#2E3549;
+    --gold:#E8B84B;
+    --gold-dim:#B8903A;
+    --coral:#E8654A;
+    --cream:#F5F0E8;
+    --cream-dim:#B7B2AA;
+    --pip:#1A1F2E;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse 900px 600px at 50% -10%, var(--table-2), transparent),
+      radial-gradient(ellipse 1200px 800px at 50% 110%, #12151F, transparent),
+      var(--table);
+    font-family:'Outfit', sans-serif;
+    color:var(--cream);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 20px;
+  }
+
+  .felt-texture{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    opacity:0.05;
+    background-image:
+      repeating-linear-gradient(45deg, #fff 0px, transparent 1px, transparent 3px),
+      repeating-linear-gradient(-45deg, #fff 0px, transparent 1px, transparent 3px);
+  }
+
+  .wrap{
+    width:100%;
+    max-width:480px;
+    position:relative;
+    z-index:1;
+  }
+
+  .eyebrow{
+    text-align:center;
+    font-size:13px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--gold);
+    font-weight:600;
+    margin-bottom:6px;
+  }
+
+  h1{
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size:clamp(32px, 6vw, 44px);
+    text-align:center;
+    margin:0 0 32px;
+    color:var(--cream);
+    letter-spacing:-0.01em;
+  }
+
+  /* ===== SPINNING WHEEL ===== */
+  /* One slice per dinner — scales cleanly to any count,
+     unlike a fixed-face die. */
+  .wheel-stage{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:8px;
+    position:relative;
+  }
+
+  .wheel-pointer{
+    position:absolute;
+    top:-6px;
+    left:50%;
+    transform:translateX(-50%);
+    width:0;
+    height:0;
+    border-left:14px solid transparent;
+    border-right:14px solid transparent;
+    border-top:22px solid var(--coral);
+    z-index:2;
+    filter:drop-shadow(0 3px 4px rgba(0,0,0,0.35));
+  }
+
+  .wheel-hub{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    background:var(--surface);
+    border:3px solid var(--gold);
+    z-index:2;
+  }
+
+  #wheel-svg{
+    display:block;
+    filter:drop-shadow(0 10px 20px rgba(0,0,0,0.35));
+  }
+
+  .wheel-slice-text{
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size:15px;
+    fill:var(--pip);
+    user-select:none;
+  }
+
+  .die-count-label{
+    text-align:center;
+    font-size:12px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--cream-dim);
+    margin-bottom:18px;
+  }
+  .die-count-label b{color:var(--gold);}
+
+  /* ===== card ===== */
+  .card{
+    background:var(--surface);
+    border-radius:20px;
+    padding:28px 24px;
+    box-shadow:0 20px 50px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  .reveal{
+    text-align:center;
+    min-height:64px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:22px;
+    perspective:600px;
+  }
+
+  .reveal-text{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:26px;
+    color:var(--cream-dim);
+    transition:all 0.4s ease;
+  }
+  .reveal-text.chosen{
+    color:var(--coral);
+    animation:flipIn 0.5s ease;
+  }
+  @keyframes flipIn{
+    from{transform:rotateX(90deg);opacity:0;}
+    to{transform:rotateX(0deg);opacity:1;}
+  }
+
+  .roll-btn{
+    width:100%;
+    padding:16px;
+    border:none;
+    border-radius:14px;
+    background:linear-gradient(155deg, var(--coral) 0%, #C94E36 100%);
+    color:#fff;
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:18px;
+    letter-spacing:0.01em;
+    cursor:pointer;
+    box-shadow:0 8px 20px rgba(232,101,74,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .roll-btn:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(232,101,74,0.45);}
+  .roll-btn:active{transform:translateY(0px) scale(0.98);}
+  .roll-btn:disabled{opacity:0.6;cursor:default;transform:none;}
+  .roll-btn:focus-visible{outline:2px solid var(--gold);outline-offset:3px;}
+
+  .reset-btn{
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:12px;
+    background:transparent;
+    color:var(--cream-dim);
+    font-family:'Outfit', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:0.04em;
+    cursor:pointer;
+  }
+  .reset-btn:hover{color:var(--cream);border-color:rgba(255,255,255,0.25);}
+  .reset-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+
+  .dinner-item.eliminated{
+    opacity:0.45;
+  }
+  .dinner-item.eliminated span{
+    text-decoration:line-through;
+  }
+
+  /* ===== list ===== */
+  .list-section{margin-top:28px;}
+  .list-label{
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--cream-dim);
+    font-weight:600;
+    margin-bottom:10px;
+  }
+
+  #dinner-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}
+
+  .dinner-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:var(--surface-2);
+    padding:10px 14px;
+    border-radius:10px;
+    font-size:15px;
+  }
+  .dinner-item.picked-glow{
+    box-shadow:0 0 0 2px var(--coral);
+  }
+
+  .remove-btn{
+    background:none;
+    border:none;
+    color:var(--cream-dim);
+    font-size:18px;
+    cursor:pointer;
+    line-height:1;
+    padding:2px 6px;
+    border-radius:6px;
+  }
+  .remove-btn:hover{color:var(--coral);background:rgba(232,101,74,0.12);}
+  .remove-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+
+  .add-row{
+    display:flex;
+    gap:8px;
+    margin-top:12px;
+  }
+  .add-row input{
+    flex:1;
+    background:var(--surface-2);
+    border:1px solid rgba(255,255,255,0.08);
+    color:var(--cream);
+    padding:10px 12px;
+    border-radius:10px;
+    font-family:'Outfit', sans-serif;
+    font-size:14px;
+  }
+  .add-row input::placeholder{color:var(--cream-dim);}
+  .add-row input:focus-visible{outline:2px solid var(--gold);outline-offset:1px;}
+  .add-row button{
+    background:var(--surface-2);
+    border:1px solid rgba(255,255,255,0.1);
+    color:var(--cream);
+    padding:10px 16px;
+    border-radius:10px;
+    font-family:'Outfit', sans-serif;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .add-row button:hover{background:#39415A;}
+  .add-row button:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+
+  .empty-note{color:var(--cream-dim);font-size:14px;padding:8px 2px;}
+
+  .link-btn{
+    background:none;
+    border:none;
+    color:var(--cream-dim);
+    font-size:15px;
+    cursor:pointer;
+    line-height:1;
+    padding:2px 4px;
+    border-radius:6px;
+    opacity:0.6;
+  }
+  .link-btn:hover{opacity:1;color:var(--gold);background:rgba(232,184,75,0.12);}
+  .link-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+
+  @media (prefers-reduced-motion: reduce){
+    .reveal-text.chosen{animation:none;}
+  }
+
+  /* ===== ingredient approval modal ===== */
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.6);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+    padding:20px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-card{
+    background:var(--surface);
+    border-radius:20px;
+    padding:24px;
+    max-width:420px;
+    width:100%;
+    max-height:85vh;
+    overflow-y:auto;
+    box-shadow:0 20px 50px rgba(0,0,0,0.5);
+  }
+  .modal-title{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:20px;
+    color:var(--gold);
+    margin-bottom:4px;
+  }
+  .modal-subtitle{
+    font-size:13px;
+    color:var(--cream-dim);
+    margin-bottom:16px;
+  }
+  .ingredient-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 12px;
+    background:var(--surface-2);
+    border-radius:10px;
+    margin-bottom:8px;
+  }
+  .ingredient-row input[type="checkbox"]{
+    width:18px;
+    height:18px;
+    accent-color:var(--coral);
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .ingredient-row label{
+    font-size:14px;
+    cursor:pointer;
+  }
+  .modal-actions{
+    display:flex;
+    gap:10px;
+    margin-top:18px;
+  }
+  .modal-actions button{
+    flex:1;
+    padding:12px;
+    border-radius:12px;
+    font-family:'Outfit', sans-serif;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    border:none;
+  }
+  .modal-btn-add{
+    background:linear-gradient(155deg, var(--coral) 0%, #C94E36 100%);
+    color:#fff;
+  }
+  .modal-btn-skip{
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.15) !important;
+    color:var(--cream-dim);
+  }
+  .modal-status{
+    text-align:center;
+    font-size:13px;
+    color:var(--cream-dim);
+    margin-top:12px;
+    min-height:16px;
+  }
+
+  /* ===== add/pass decision buttons ===== */
+  .decision-row{
+    display:none;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .decision-row.visible{display:flex;}
+  .decision-row button{
+    flex:1;
+    padding:14px;
+    border:none;
+    border-radius:14px;
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:15px;
+    cursor:pointer;
+    transition:transform 0.15s ease;
+  }
+  .decision-row button:active{transform:scale(0.97);}
+  .decision-row button:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+  .decision-add{
+    background:linear-gradient(155deg, #5CA86B 0%, #3D8049 100%);
+    color:#fff;
+  }
+  .decision-pass{
+    background:var(--surface-2);
+    color:var(--cream-dim);
+    border:1px solid rgba(255,255,255,0.12) !important;
+  }
+  .decision-pass:hover{color:var(--cream);}
+</style>
+</head>
+<body>
+<div class="felt-texture"></div>
+<div class="wrap">
+  <div class="eyebrow">Bryce &amp; Wife's</div>
+  <h1>What's for Dinner?</h1>
+
+  <div class="wheel-stage">
+    <div class="wheel-pointer"></div>
+    <svg id="wheel-svg" width="220" height="220" viewBox="0 0 220 220"></svg>
+    <div class="wheel-hub"></div>
+  </div>
+  <div class="die-count-label" id="die-count-label">Rolling out of <b>10</b> dinners</div>
+
+  <div class="card">
+    <div class="reveal">
+      <div class="reveal-text" id="reveal-text">Roll to decide tonight's dinner</div>
+    </div>
+
+    <div class="decision-row" id="decision-row">
+      <button class="decision-add" id="decision-add-btn">✓ Keep This</button>
+      <button class="decision-pass" id="decision-pass-btn">✕ Pass</button>
+    </div>
+
+    <button class="roll-btn" id="roll-btn">🎡 Spin the Wheel</button>
+    <button class="reset-btn" id="reset-btn">↺ Reset Wheel (bring back everyone)</button>
+
+    <div class="list-section">
+      <div class="list-label">Tonight's Contenders</div>
+      <ul id="dinner-list"></ul>
+      <div class="add-row">
+        <input type="text" id="new-dinner" placeholder="Add a dinner idea…" maxlength="60" />
+        <button id="add-btn">Add</button>
+      </div>
+      <div class="add-row" style="margin-top:6px;">
+        <input type="url" id="new-dinner-link" placeholder="Recipe link (optional)…" maxlength="300" />
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INGREDIENT APPROVAL MODAL -->
+<div class="modal-overlay" id="ingredient-modal">
+  <div class="modal-card">
+    <div class="modal-title" id="modal-recipe-name">Recipe Found!</div>
+    <div class="modal-subtitle">Check off what you need to buy — uncheck anything you already have.</div>
+    <div id="ingredient-list"></div>
+    <div class="modal-actions">
+      <button class="modal-btn-skip" id="modal-skip-btn">Skip</button>
+      <button class="modal-btn-add" id="modal-add-btn">Add to Shopping List</button>
+    </div>
+    <div class="modal-status" id="modal-status"></div>
+  </div>
+</div>
+
+<script>
+  const wheelSvg = document.getElementById('wheel-svg');
+  const dieCountLabel = document.getElementById('die-count-label');
+  const rollBtn = document.getElementById('roll-btn');
+  const resetBtn = document.getElementById('reset-btn');
+  const revealText = document.getElementById('reveal-text');
+  const listEl = document.getElementById('dinner-list');
+  const newInput = document.getElementById('new-dinner');
+  const newLinkInput = document.getElementById('new-dinner-link');
+  const addBtn = document.getElementById('add-btn');
+  const ingredientModal = document.getElementById('ingredient-modal');
+  const modalRecipeName = document.getElementById('modal-recipe-name');
+  const ingredientListEl = document.getElementById('ingredient-list');
+  const modalAddBtn = document.getElementById('modal-add-btn');
+  const modalSkipBtn = document.getElementById('modal-skip-btn');
+  const modalStatus = document.getElementById('modal-status');
+  const decisionRow = document.getElementById('decision-row');
+  const decisionAddBtn = document.getElementById('decision-add-btn');
+  const decisionPassBtn = document.getElementById('decision-pass-btn');
+
+  let currentWinnerName = null; // set by finish(), read by the Add/Pass handlers
+
+  async function checkMealieForRecipe(dinnerName){
+    try {
+      const res = await fetch('/api/mealie/recipe/' + encodeURIComponent(dinnerName));
+      const data = await res.json();
+      if(data.found){
+        showIngredientModal(data.recipeName, data.ingredients);
+      }
+    } catch(e) {
+      // Silently skip -- a Mealie hiccup shouldn't interrupt dinner time
+    }
+  }
+
+  function showIngredientModal(recipeName, ingredients){
+    modalRecipeName.textContent = recipeName;
+    modalStatus.textContent = '';
+    ingredientListEl.innerHTML = '';
+
+    ingredients.forEach((ingredient, i) => {
+      const row = document.createElement('div');
+      row.className = 'ingredient-row';
+      const checkboxId = 'ingredient-' + i;
+      row.innerHTML = `
+        <input type="checkbox" id="${checkboxId}" checked>
+        <label for="${checkboxId}"></label>
+      `;
+      row.querySelector('label').textContent = ingredient;
+      ingredientListEl.appendChild(row);
+    });
+
+    ingredientModal.classList.add('open');
+  }
+
+  function closeIngredientModal(){
+    ingredientModal.classList.remove('open');
+  }
+
+  modalSkipBtn.onclick = closeIngredientModal;
+
+  decisionAddBtn.onclick = () => {
+    decisionRow.classList.remove('visible');
+    rollBtn.disabled = false;
+    checkMealieForRecipe(currentWinnerName);
+  };
+
+  decisionPassBtn.onclick = () => {
+    decisionRow.classList.remove('visible');
+    revealText.textContent = 'Passed — spin again';
+    revealText.classList.remove('chosen');
+    eliminateCurrentWinner();
+    rollBtn.disabled = false;
+  };
+
+  modalAddBtn.onclick = async () => {
+    const checked = Array.from(ingredientListEl.querySelectorAll('input[type="checkbox"]:checked'));
+    const approvedIngredients = checked.map(cb => cb.nextElementSibling.textContent);
+
+    if(approvedIngredients.length === 0){
+      modalStatus.textContent = 'Nothing checked -- pick at least one item.';
+      return;
+    }
+
+    modalAddBtn.disabled = true;
+    modalStatus.textContent = 'Adding...';
+
+    try {
+      const res = await fetch('/api/mealie/shopping-list', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ingredients: approvedIngredients})
+      });
+      const data = await res.json();
+
+      if(data.failed && data.failed.length > 0){
+        modalStatus.textContent = `Added ${data.added.length}, ${data.failed.length} failed.`;
+      } else {
+        modalStatus.textContent = `Added ${data.added.length} item(s) to your shopping list!`;
+        setTimeout(closeIngredientModal, 1500);
+      }
+    } catch(e) {
+      modalStatus.textContent = 'Something went wrong -- try again.';
+    }
+
+    modalAddBtn.disabled = false;
+  };
+
+  let dinners = [];
+  let activePool = []; // indices into `dinners` still eligible to be spun
+  let pendingElimination = null; // last winner, removed at the START of the next spin
+  let rolling = false;
+  let wheelRotation = 0; // cumulative, so each spin keeps going forward
+
+  const CX = 110, CY = 110, R = 100;
+  const SLICE_COLORS = ['var(--gold)', 'var(--coral)'];
+
+  function pointAt(angleDeg, radius){
+    const rad = (angleDeg * Math.PI) / 180;
+    return {
+      x: CX + radius * Math.sin(rad),
+      y: CY - radius * Math.cos(rad)
+    };
+  }
+
+  function drawWheel(){
+    const n = activePool.length;
+    wheelSvg.innerHTML = '';
+    if(n === 0){
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', CX);
+      circle.setAttribute('cy', CY);
+      circle.setAttribute('r', R);
+      circle.setAttribute('fill', 'var(--surface-2)');
+      wheelSvg.appendChild(circle);
+      return;
+    }
+    const sliceAngle = 360 / n;
+    for(let pos = 0; pos < n; pos++){
+      const originalIndex = activePool[pos];
+      const startAngle = pos * sliceAngle;
+      const endAngle = (pos + 1) * sliceAngle;
+      const midAngle = startAngle + sliceAngle / 2;
+      const p1 = pointAt(startAngle, R);
+      const p2 = pointAt(endAngle, R);
+      const largeArc = sliceAngle > 180 ? 1 : 0;
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const d = n === 1
+        ? `M ${CX},${CY - R} A ${R},${R} 0 1 1 ${CX - 0.01},${CY - R} Z`
+        : `M ${CX},${CY} L ${p1.x},${p1.y} A ${R},${R} 0 ${largeArc} 1 ${p2.x},${p2.y} Z`;
+      path.setAttribute('d', d);
+      path.setAttribute('fill', SLICE_COLORS[pos % SLICE_COLORS.length]);
+      path.setAttribute('stroke', 'var(--table)');
+      path.setAttribute('stroke-width', '2');
+      wheelSvg.appendChild(path);
+
+      const labelPos = pointAt(midAngle, R * 0.68);
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', labelPos.x);
+      text.setAttribute('y', labelPos.y);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('dominant-baseline', 'middle');
+      text.setAttribute('class', 'wheel-slice-text');
+      text.setAttribute('transform', `rotate(${midAngle}, ${labelPos.x}, ${labelPos.y})`);
+      text.textContent = originalIndex + 1; // permanent number, not repositioned
+      wheelSvg.appendChild(text);
+    }
+  }
+
+  function updateCountLabel(){
+    const n = activePool.length;
+    const total = dinners.length;
+    if(total === 0){
+      dieCountLabel.innerHTML = `Add a dinner to get rolling`;
+    } else if(n === total){
+      dieCountLabel.innerHTML = `Rolling out of <b>${n}</b> dinner${n === 1 ? '' : 's'}`;
+    } else if(n === 0){
+      dieCountLabel.innerHTML = `Everyone's had a turn — <b>Reset Wheel</b> to spin again`;
+    } else {
+      dieCountLabel.innerHTML = `<b>${n}</b> of ${total} still in play`;
+    }
+  }
+
+  function resetPool(){
+    activePool = dinners.map((_, i) => i);
+  }
+
+  async function fetchDinners(){
+    const res = await fetch('/api/dinners');
+    dinners = await res.json();
+    resetPool();
+    pendingElimination = null;
+    drawWheel();
+    updateCountLabel();
+    renderList();
+  }
+
+  function renderList(pickedName){
+    listEl.innerHTML = '';
+    updateCountLabel();
+    if(dinners.length === 0){
+      const li = document.createElement('li');
+      li.className = 'empty-note';
+      li.textContent = 'No dinners yet — add one below.';
+      listEl.appendChild(li);
+      return;
+    }
+    dinners.forEach((name, i) => {
+      const isEliminated = !activePool.includes(i);
+      const li = document.createElement('li');
+      li.className = 'dinner-item'
+        + (name === pickedName ? ' picked-glow' : '')
+        + (isEliminated ? ' eliminated' : '');
+      const left = document.createElement('span');
+      left.textContent = `${i + 1}. ${name}`;
+      const linkBtn = document.createElement('button');
+      linkBtn.className = 'link-btn';
+      linkBtn.textContent = '🔗';
+      linkBtn.title = 'View saved recipe link';
+      linkBtn.setAttribute('aria-label', 'View recipe link for ' + name);
+      linkBtn.onclick = () => viewDinnerLink(name);
+      const btn = document.createElement('button');
+      btn.className = 'remove-btn';
+      btn.textContent = '✕';
+      btn.setAttribute('aria-label', 'Remove ' + name);
+      btn.onclick = () => removeDinner(name);
+      li.appendChild(left);
+      li.appendChild(linkBtn);
+      li.appendChild(btn);
+      listEl.appendChild(li);
+    });
+  }
+
+  async function addDinner(){
+    const name = newInput.value.trim();
+    if(!name) return;
+    const link = newLinkInput.value.trim();
+    const res = await fetch('/api/dinners', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name, link: link || null})
+    });
+    dinners = await res.json();
+    resetPool();
+    pendingElimination = null;
+    drawWheel();
+    newInput.value = '';
+    newLinkInput.value = '';
+    renderList();
+  }
+
+  async function viewDinnerLink(name){
+    try {
+      const res = await fetch('/api/dinners/' + encodeURIComponent(name) + '/link');
+      const data = await res.json();
+      if(data.link){
+        window.prompt('Recipe link for "' + name + '" (copy below):', data.link);
+      } else {
+        alert('No recipe link saved for "' + name + '".');
+      }
+    } catch(e) {
+      alert('Could not load the link right now.');
+    }
+  }
+
+  async function removeDinner(name){
+    const res = await fetch('/api/dinners/' + encodeURIComponent(name), {method:'DELETE'});
+    dinners = await res.json();
+    resetPool();
+    pendingElimination = null;
+    drawWheel();
+    renderList();
+  }
+
+  resetBtn.onclick = () => {
+    if(rolling) return;
+    resetPool();
+    pendingElimination = null;
+    currentWinnerName = null;
+    decisionRow.classList.remove('visible');
+    wheelRotation = 0;
+    wheelSvg.style.transform = `rotate(0deg)`;
+    revealText.textContent = 'Roll to decide tonight\'s dinner';
+    revealText.classList.remove('chosen');
+    drawWheel();
+    renderList();
+  };
+
+  addBtn.onclick = addDinner;
+  newInput.addEventListener('keydown', e => { if(e.key === 'Enter') addDinner(); });
+
+  function eliminateCurrentWinner(){
+    if(pendingElimination !== null){
+      const idx = activePool.indexOf(pendingElimination);
+      if(idx !== -1){
+        activePool.splice(idx, 1);
+        wheelRotation = 0;
+        wheelSvg.style.transform = `rotate(0deg)`;
+      }
+      pendingElimination = null;
+      drawWheel();
+      renderList();
+      updateCountLabel();
+    }
+  }
+
+  rollBtn.onclick = () => {
+    if(rolling) return;
+
+    // The PREVIOUS winner stays visible on the wheel through its
+    // "victory lap" — it only actually comes off now, at the start
+    // of the next spin, not the moment its result was shown.
+    eliminateCurrentWinner();
+
+    if(activePool.length === 0){
+      revealText.textContent = "Everyone's had a turn — hit Reset Wheel";
+      revealText.classList.remove('chosen');
+      rollBtn.disabled = true;
+      return;
+    }
+
+    rolling = true;
+    rollBtn.disabled = true;
+    revealText.textContent = 'Rolling…';
+    revealText.classList.remove('chosen');
+
+    // Pick a position WITHIN the currently-drawn wheel (the pool),
+    // since that's what determines the slice's actual angle.
+    const n = activePool.length;
+    const winningPos = Math.floor(Math.random() * n);
+    const winningIndex = activePool[winningPos]; // permanent index into `dinners`
+    const winningNumber = winningIndex + 1;
+    const sliceAngle = 360 / n;
+    const winningCenterAngle = winningPos * sliceAngle + sliceAngle / 2;
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const finish = () => {
+      const choice = dinners[winningIndex];
+      revealText.textContent = `#${winningNumber} — ${choice}`;
+      revealText.classList.add('chosen');
+      // Don't remove it yet — it stays on the wheel until the next
+      // spin is pressed, so the win is visible for a moment first.
+      pendingElimination = winningIndex;
+      currentWinnerName = choice;
+      renderList(choice);
+      updateCountLabel();
+      rolling = false;
+      decisionRow.classList.add('visible');
+    };
+
+    if(reduceMotion){
+      const delta = (360 - winningCenterAngle + 360) % 360;
+      wheelSvg.style.transform = `rotate(${delta}deg)`;
+      finish();
+      return;
+    }
+
+    // Land the winning slice's center exactly under the top pointer,
+    // after several full spins for a satisfying roll.
+    const currentMod = ((wheelRotation % 360) + 360) % 360;
+    const deltaToLand = (360 - winningCenterAngle - currentMod + 360) % 360;
+    const extraSpins = 360 * (4 + Math.floor(Math.random() * 2));
+    const target = wheelRotation + extraSpins + deltaToLand;
+
+    // Animate a plain object's value with anime.js's easing, then read
+    // that eased value each frame — rather than recomputing our own
+    // linear progress, which was silently ignoring the easing curve
+    // and causing the wheel to stop abruptly instead of settling in.
+    const spinState = { r: wheelRotation };
+
+    anime({
+      targets: spinState,
+      r: target,
+      duration: 3200,
+      easing: 'easeOutQuint', // long, pronounced deceleration tail
+      update: () => {
+        wheelSvg.style.transform = `rotate(${spinState.r}deg)`;
+      },
+      complete: () => {
+        wheelRotation = target;
+        wheelSvg.style.transform = `rotate(${wheelRotation}deg)`;
+        finish();
+      }
+    });
+  };
+
+  fetchDinners();
+</script>
+</body>
+</html>
