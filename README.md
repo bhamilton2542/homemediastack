@@ -7,8 +7,6 @@ custom-built apps.
 
 ## Custom apps in this repo
 
-- **clan-vote** — member voting site with Discord webhook notifications
-- **clan-about** — clan info/rules site
 - **dinner-roller** — a spinning-wheel dinner picker with Mealie
   recipe/shopping-list integration (ingredient parsing, consolidation,
   and a public read/write shopping list view)

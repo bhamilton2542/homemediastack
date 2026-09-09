@@ -1,29 +1,4 @@
 services:
-  clan-about:
-    build: ./clan-about
-    container_name: clan-about
-    restart: unless-stopped
-    ports:
-      - 5700:5700
-    volumes:
-      - ./data/clan-about:/app/data
-    environment:
-      - SECRET_KEY=${CLAN_ABOUT_SECRET_KEY}
-
-  clan-vote:
-    build: ./clan-vote
-    container_name: clan-vote
-    restart: unless-stopped
-    ports:
-      - 5600:5600
-    volumes:
-      - ./data/clan-vote:/app/data
-    environment:
-      - SECRET_KEY=${CLAN_VOTE_SECRET_KEY}
-      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
-      - DISCORD_NEW_VOTE_WEBHOOK_URL=${DISCORD_NEW_VOTE_WEBHOOK_URL}
-      - PYTHONUNBUFFERED=1
-
   mealie:
     container_name: mealie
     image: ghcr.io/mealie-recipes/mealie:v3.24.0
