@@ -17,12 +17,16 @@ custom-built apps.
 ## Setup
 
 1. Run `./setup.sh` -- an interactive script that asks your OS, detects
-   your correct PUID/PGID, and fills in your timezone and media paths.
-   (Or manually copy `.env.example` to `.env` and fill in your own values.)
-2. `docker compose up -d`
-3. Each *arr-style service (Radarr, Sonarr, etc.) generates its own API
+   your correct PUID/PGID, fills in your timezone and media paths, and
+   offers to start the whole stack for you (`docker compose up -d`)
+   right at the end. (Or manually copy `.env.example` to `.env`, fill
+   in your own values, and run `docker compose up -d` yourself.)
+2. Each *arr-style service (Radarr, Sonarr, etc.) generates its own API
    key on first launch -- configure indexers/download clients through
    each service's own web UI afterward.
+3. Mealie-related values in `.env` (API token, shopping list ID) can
+   only be filled in *after* Mealie is running, since they come from
+   Mealie's own UI/API once it's up.
 
 ## Note on data
 
