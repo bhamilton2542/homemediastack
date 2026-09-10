@@ -16,9 +16,9 @@ custom-built apps.
 
 ## Setup
 
-1. Copy `.env.example` to `.env` and fill in your own values (paths,
-   secrets, API tokens). Generate random secret keys with:
-   python3 -c "import secrets; print(secrets.token_hex(32))"
+1. Run `./setup.sh` -- an interactive script that asks your OS, detects
+   your correct PUID/PGID, and fills in your timezone and media paths.
+   (Or manually copy `.env.example` to `.env` and fill in your own values.)
 2. `docker compose up -d`
 3. Each *arr-style service (Radarr, Sonarr, etc.) generates its own API
    key on first launch -- configure indexers/download clients through
