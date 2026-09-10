@@ -1,6 +1,7 @@
 #!/bin/bash
 # setup.sh - Interactive first-time setup for this home media server stack.
-# Asks a few questions and generates a working .env file from .env.example.
+# Asks a few questions, generates a working .env file, and optionally
+# starts the whole stack -- all in one script.
 
 set -e
 
@@ -86,12 +87,26 @@ if [ -n "$downloads_path" ]; then
 fi
 
 echo ""
-echo "=== Done! ==="
-echo ".env has been created with your values."
+echo "=== .env created! ==="
+echo ""
+
+read -p "Start the stack now with 'docker compose up -d'? [Y/n] " start_now
+if [[ ! "$start_now" =~ ^[Nn]$ ]]; then
+    echo ""
+    echo "Starting containers..."
+    docker compose up -d
+    echo ""
+    echo "=== Done! ==="
+    echo "Containers are starting up. This may take a few minutes on first"
+    echo "run while images download."
+else
+    echo ""
+    echo "Skipped -- run 'docker compose up -d' whenever you're ready."
+fi
+
 echo ""
 echo "Remaining steps:"
 echo "  1. Review .env and fill in any remaining values (Mealie tokens, etc.)"
 echo "     -- some of these require the containers to be running first."
-echo "  2. Run: docker compose up -d"
-echo "  3. Configure indexers/download clients in Radarr, Sonarr, etc."
+echo "  2. Configure indexers/download clients in Radarr, Sonarr, etc."
 echo "     through each service's own web UI."
