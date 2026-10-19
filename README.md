@@ -35,3 +35,23 @@ config/database folders (config/, data/ -- gitignored) since those
 are large, machine-specific runtime data, not something Git is suited
 for. This repo is the blueprint for the setup, not a live backup --
 back up the actual config/data folders separately.
+
+## Download → Tdarr → import pipeline
+
+New downloads are transcoded by Tdarr *before* Sonarr/Radarr import them:
+NZBGet downloads, `nzbget-scripts/TdarrTranscode.py` sends the release to Tdarr and
+waits, then Sonarr/Radarr rename and move the result as usual. The script is
+fail-safe: if Tdarr is down or errors, the original file imports untouched.
+
+The script is mounted into NZBGet automatically. Two one-time steps in the UIs:
+
+1. **Tdarr:** create a library named exactly `Downloads` with source `/downloads`,
+   folder watching, scheduled scans and scan-on-start all **off**, and add your
+   transcode plugin stack to it.
+2. **NZBGet:** Settings → Extension Scripts → enable `TdarrTranscode`
+   (defaults: `http://tdarr:8265`, library `Downloads`, categories `Movies,TV Shows`).
+
+Check the link with: `docker exec nzbget /config/scripts/TdarrTranscode.py --check`
+
+Optional: pin the Tdarr image by digest instead of `:latest` so auto-updates
+(e.g. Watchtower) can't change the API underneath the script.

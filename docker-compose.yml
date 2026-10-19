@@ -76,6 +76,7 @@ services:
       - 6789:6789
     volumes:
       - ./config/nzbget:/config
+      - ./nzbget-scripts/TdarrTranscode.py:/config/scripts/TdarrTranscode.py:ro
       - ${DOWNLOADS_PATH}:/downloads
       - ${MUSIC_DOWNLOADS_PATH}:/downloads-music
 
@@ -160,6 +161,7 @@ services:
       - ./config/tdarr/logs:/app/logs
       - ${MEDIA_PATH}:/media
       - ./config/tdarr/transcode_cache:/temp
+      - ${DOWNLOADS_PATH}:/downloads
 
   watchtower:
     image: nickfedor/watchtower
