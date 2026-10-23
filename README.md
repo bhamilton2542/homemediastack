@@ -55,3 +55,25 @@ Check the link with: `docker exec nzbget /config/scripts/TdarrTranscode.py --che
 
 Optional: pin the Tdarr image by digest instead of `:latest` so auto-updates
 (e.g. Watchtower) can't change the API underneath the script.
+
+## Optional: run Plex on its own Mac mini
+
+Plex doesn't have to share a machine with the Docker stack. Running it on a second Mac
+keeps Tdarr transcodes from competing with streams. Everything else stays where it is;
+the stack only needs to know Plex's address (port 32400) in Seerr, Agregarr, Tautulli
+and Bazarr.
+
+1. Mount the NAS at the same path on both Macs (`/Volumes/Plex`), so Plex's library paths match.
+2. Install Plex Media Server on the new Mac, but don't open it. To move an existing server,
+   quit Plex on the old Mac, copy `~/Library/Application Support/Plex Media Server`
+   (without `Updates` and `Cache`) and `~/Library/Preferences/com.plexapp.plexmediaserver.plist`
+   to the new Mac, run `killall cfprefsd`, then start Plex. `claimed="1"` at
+   `http://<ip>:32400/identity` means it kept its identity.
+3. Give the new Mac a fixed IP, turn off the screen lock, enable automatic login, and
+   forward port 32400 to it for remote access.
+
+`plex-mini/plex-backup.sh` backs the server up weekly to iCloud Drive (Plex is stopped for
+a few minutes, 4 archives kept, Discord notice on success or failure). Put the Discord
+webhook URL in `~/.plex-backup-webhook` (chmod 600) on the Plex Mac, install
+`plex-mini/com.hamilton.plexbackup.plist` in `~/Library/LaunchAgents`, and load it with
+`launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.hamilton.plexbackup.plist`.
